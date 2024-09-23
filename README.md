@@ -1,0 +1,1 @@
+# plugins-change-wc-price-title
