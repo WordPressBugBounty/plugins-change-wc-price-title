@@ -3,14 +3,16 @@
  * Plugin Name:          Change Price Title for WooCommerce
  * Plugin URI:           https://kartechify.com/product/change-woocommerce-price-title/
  * Description:          This plugin allows you to change the WooCommerce Price Title. E.g From: $100/- Only. You can completely change the price title or set caption to price. Also, you can hide price titles on the WooCommerce Product page or on all WooCommerce pages.
- * Version:              2.5
+ * Version:              2.6
  * Author:               Kartik Parmar
  * Author URI:           https://www.kartechify.com
  * Text Domain:          change-wc-price-title
  * Domain Path:          /i18n/languages/
  * Requires PHP:         7.3
+ * Tested up to:         6.6.2
  * WC requires at least: 3.0.0
- * WC tested up to:      8.7.0
+ * WC tested up to:      9.3.3
+ * Requires Plugins:     woocommerce
  *
  * @package Change_WooCommerce_Price_Title
  */
@@ -25,7 +27,7 @@ if ( ! function_exists( 'cwpt_fs' ) ) {
 
 		if ( ! isset( $cwpt_fs ) ) {
 			// Include Freemius SDK.
-			require_once dirname( __FILE__ ) . '/freemius/start.php';
+			require_once __DIR__ . '/freemius/start.php';
 
 			$cwpt_fs = fs_dynamic_init(
 				array(
@@ -75,17 +77,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 use Automattic\WooCommerce\Utilities\OrderUtil;
 
-/**
- * CWPT_price class
- */
 if ( ! class_exists( 'CWPT_Price' ) ) {
 
 	/**
 	 * CWPT_price class
-	 *
-	 * @since 1.0
 	 */
-	class CWPT_Price {
+	class CWPT_Price { // phpcs:ignore
 
 		/**
 		 * CWPT_price Constructor
@@ -104,13 +101,12 @@ if ( ! class_exists( 'CWPT_Price' ) ) {
 			add_action( 'init', array( &$this, 'cwpt_price_update_po_file' ) );// Language Translation.
 			add_action( 'admin_menu', array( &$this, 'cwpt_admin_menu' ) ); // WordPress Administration Menu.
 
-			if ( is_admin() ) { // admin actions.
-				add_action( 'admin_init', array( &$this, 'cwpt_register_mysettings' ) );
-			}
+			add_action( 'admin_init', array( $this, 'cwpt_add_settings_fields' ) );
+			add_action( 'admin_init', array( $this, 'cwpt_register_settings' ) );
+			add_action( 'admin_init', array( $this, 'cwpt_add_settings_section' ) );
 
 			// Including styles and scripts.
 			add_action( 'wp_enqueue_scripts', array( &$this, 'cwpt_add_scripts' ) );
-			add_action( 'admin_enqueue_scripts', array( &$this, 'cwpt_add_scripts' ) );
 			// Settings link on plugins page.
 			add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), array( &$this, 'cwpt_plugin_settings_link' ) );
 
@@ -143,14 +139,15 @@ if ( ! class_exists( 'CWPT_Price' ) ) {
 				return;
 			}
 
-			$ajax_url     = get_admin_url() . 'admin-ajax.php';
-			$post_id      = $post->ID;
-			$cur_symbol   = '';
-			$price        = '';
-			$product_type = '';
+			$post_id = $post->ID;
 
-			if ( 'product' === get_post_type( $post_id ) ){
+			if ( 'product' === get_post_type( $post_id ) ) {
+				$cwpt_enable_multiplier = get_option( 'cwpt_enable_multiplier', '' );
+				if ( '1' !== $cwpt_enable_multiplier ) {
+					return;
+				}
 
+				$ajax_url        = get_admin_url() . 'admin-ajax.php';
 				$_product        = wc_get_product( $post_id );
 				$price           = $_product->get_price();
 				$product_type    = $_product->get_type();
@@ -175,59 +172,49 @@ if ( ! class_exists( 'CWPT_Price' ) ) {
 
 					$price = $variation_price;
 				}
+
+				$cwpt_plugin_version_number = get_option( 'change_woocommerce_price_title_db_version' );
+				$cwpt_enable_multiplier     = get_option( 'cwpt_enable_multiplier' );
+
+				wp_enqueue_script( 'jquery' );
+
+				wp_deregister_script( 'jqueryui' );
+
+				wp_register_script(
+					'cwpt-price-title',
+					plugin_dir_url( __FILE__ ) . 'assets/js/cwpt-price-title.js',
+					'',
+					$cwpt_plugin_version_number,
+					false
+				);
+
+				wp_localize_script(
+					'cwpt-price-title',
+					'cwpt_settings_params',
+					array(
+						'ajax_url'      => $ajax_url,
+						'post_id'       => $post_id,
+						'title_color'   => __( 'red', 'change-wc-price-title' ),
+						'product_price' => $price,
+						'wc_currency'   => $cur_symbol,
+						'product_type'  => $product_type,
+						'multiplier'    => $cwpt_enable_multiplier,
+					)
+				);
+
+				wp_enqueue_script( 'cwpt-price-title' );
 			}
-
-			$cwpt_plugin_version_number = get_option( 'change_woocommerce_price_title_db_version' );
-			$cwpt_enable_multiplier     = get_option( 'cwpt_enable_multiplier' );
-
-			wp_enqueue_script( 'jquery' );
-
-			wp_deregister_script( 'jqueryui' );
-
-			wp_register_script(
-				'cwpt-price-title',
-				plugin_dir_url( __FILE__ ) . 'assets/js/cwpt-price-title.js',
-				'',
-				$cwpt_plugin_version_number,
-				false
-			);
-
-			wp_localize_script(
-				'cwpt-price-title',
-				'cwpt_settings_params',
-				array(
-					'ajax_url'      => $ajax_url,
-					'post_id'       => $post_id,
-					'title_color'   => __( 'red', 'woocommerce-booking' ),
-					'product_price' => $price,
-					'wc_currency'   => $cur_symbol,
-					'product_type'  => $product_type,
-					'multiplier'    => $cwpt_enable_multiplier,
-				)
-			);
-
-			wp_enqueue_script( 'cwpt-price-title' );
-		}
-
-		/**
-		 * Regestering settings.
-		 */
-		public function cwpt_register_mysettings(){
-			register_setting( 'woocommerce-price-title', 'cwpt_woocommerce_price_title' );
-			register_setting( 'woocommerce-price-title', 'cwpt_woocommerce_hide_price_title' );
-			register_setting( 'woocommerce-price-title', 'cwpt_apply_on_all_products' );
-			register_setting( 'woocommerce-price-title', 'cwpt_enable_multiplier' );
 		}
 
 		/**
 		 * Adding submenu under WooCommerce menu.
 		 */
 		public function cwpt_admin_menu() {
-			$page = add_submenu_page(
+			add_submenu_page(
 				'woocommerce',
-				__( 'Price Title', 'change-wc-price-title' ),
+				__( 'Price Title ', 'change-wc-price-title' ),
 				__( 'WooCommerce Price Title', 'change-wc-price-title' ),
-				'manage_woocommerce',
+				'manage_woocommerce', // phpcs:ignore
 				'woocommerce_price_title',
 				array( &$this, 'cwpt_menu_page' )
 			);
@@ -236,68 +223,127 @@ if ( ! class_exists( 'CWPT_Price' ) ) {
 		/**
 		 * Callback action for submenu.
 		 */
-		public function cwpt_menu_page(){
+		public function cwpt_menu_page() {
 			global $wpdb;
 
 			// Check the user capabilities.
-			if ( ! current_user_can( 'manage_woocommerce' ) ) {
-				wp_die( __( 'You do not have sufficient permissions to access this page.', 'change-wc-price-title' ) );
+			if ( ! current_user_can( 'manage_woocommerce' ) ) { //phpcs:ignore
+				wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'change-wc-price-title' ) );
 			}
-
-			$title = __( 'WooCommerce Price Title Settings' );
-
+			settings_errors();
 			?>
-				<div class="wrap">    
-					<h2><?php echo esc_html( $title ); ?></h2>
-					<br/>
-					<form method="POST" action="options.php" novalidate="novalidate">
+				<div class="wrap">
+					<form method="post" action="options.php">
 						<?php
-						settings_fields( 'woocommerce-price-title' );
-						do_settings_sections( 'woocommerce-price-title' );
+						settings_fields( 'cwpt_settings_group' );
+						do_settings_sections( 'cwpt_settings_page' );
+						submit_button();
 						?>
-
-						<table class="form-table">
-							<tr>
-								<th scope="row"><label for="cwpt_woocommerce_price_title"><?php esc_html_e( 'Change Price Title For All Products', 'change-wc-price-title' ); ?></label></th>
-								<td>
-									<input name="cwpt_woocommerce_price_title" type="text" id="cwpt_woocommerce_price_title" value="<?php echo esc_attr( get_option( 'cwpt_woocommerce_price_title' ) ); ?>" class="regular-text" />
-									<br/>
-									<i><?php esc_html_e( 'Here you can set price title for all your products. Also you can use PRICE shortcode as per your requirement. E.g From: PRICE Only/- ', 'change-wc-price-title' ); ?></i>
-								</td>
-
-							</tr>
-
-							<tr>
-								<th scope="row"><label for="cwpt_woocommerce_hide_price_title"><?php esc_html_e( 'Hide Price Title', 'change-wc-price-title' ); ?></label></th>
-								<td>
-									<input name="cwpt_woocommerce_hide_price_title" type="checkbox" id="cwpt_woocommerce_hide_price_title" value="1" <?php checked( '1', get_option( 'cwpt_woocommerce_hide_price_title' ) ); ?> class="regular-text" />
-								  
-									<i><?php esc_html_e( 'You can hide price title for all WooCommerce products.', 'change-wc-price-title' ); ?></i>
-								</td>
-							</tr>
-
-							<tr>
-								<th scope="row"><label for="cwpt_apply_on_all_products"><?php esc_html_e( 'Apply Above Options On All WooCommerce Pages', 'change-wc-price-title' ); ?></label></th>
-								<td>
-									<input name="cwpt_apply_on_all_products" type="checkbox" id="cwpt_apply_on_all_products" value="1" <?php checked( '1', get_option( 'cwpt_apply_on_all_products' ) ); ?> class="regular-text" />
-								  
-									<i><?php esc_html_e( 'Enable this if you wish to apply above setting on all WooCommerce Pages.', 'change-wc-price-title' ); ?></i>
-								</td>
-							</tr>
-
-							<tr>
-							<th scope="row"><label for="cwpt_enable_multiplier"><?php esc_html_e( 'Enable to show price by multiplying with quantity', 'change-wc-price-title' ); ?></label></th>
-								<td>
-									<input name="cwpt_enable_multiplier" type="checkbox" id="cwpt_enable_multiplier" value="1" <?php checked( '1', get_option( 'cwpt_enable_multiplier' ) ); ?> class="regular-text" />									
-									<i><?php esc_html_e( 'Enable this if you wish to show price as per the multiply by quantity.', 'change-wc-price-title' ); ?></i>
-								</td>
-							</tr>
-						</table>
-
-						<?php submit_button(); ?>
 					</form>
 				</div>
-			<?php 
+				<?php
+		}
+
+		/**
+		 * Callback for showing page heading on Global settings.
+		 */
+		public function cwpt_add_settings_section() {
+			add_settings_section(
+				'cwpt_settings_section',
+				__( 'WooCommerce Price Title Settings', 'change-wc-price-title' ),
+				array( $this, 'cwpt_section_callback' ),
+				'cwpt_settings_page'
+			);
+		}
+
+		/**
+		 * Callback showing page description on Global settings.
+		 */
+		public function cwpt_section_callback() {
+			echo '<p>' . esc_html__( 'Configure the price title settings for WooCommerce Product Price.', 'change-wc-price-title' ) . '</p>';
+		}
+
+		/**
+		 * Callback for adding the fields on Global settings.
+		 */
+		public function cwpt_add_settings_fields() {
+			add_settings_field(
+				'cwpt_woocommerce_price_title',
+				__( 'Change Price Title For All Products', 'change-wc-price-title' ),
+				array( $this, 'cwpt_price_title_callback' ),
+				'cwpt_settings_page',
+				'cwpt_settings_section'
+			);
+
+			add_settings_field(
+				'cwpt_woocommerce_hide_price_title',
+				__( 'Hide Price Title', 'change-wc-price-title' ),
+				array( $this, 'cwpt_hide_price_title_callback' ),
+				'cwpt_settings_page',
+				'cwpt_settings_section'
+			);
+
+			add_settings_field(
+				'cwpt_apply_on_all_products',
+				__( 'Apply Above Options On All WooCommerce Pages', 'change-wc-price-title' ),
+				array( $this, 'cwpt_apply_on_all_products_callback' ),
+				'cwpt_settings_page',
+				'cwpt_settings_section'
+			);
+
+			add_settings_field(
+				'cwpt_enable_multiplier',
+				__( 'Enable to show price by multiplying with quantity', 'change-wc-price-title' ),
+				array( $this, 'cwpt_enable_multiplier_callback' ),
+				'cwpt_settings_page',
+				'cwpt_settings_section'
+			);
+		}
+
+		/**
+		 * Callback function for Set price title for all products option on Global settings.
+		 */
+		public function cwpt_price_title_callback() {
+			$value = get_option( 'cwpt_woocommerce_price_title' );
+			echo '<input type="text" id="cwpt_woocommerce_price_title" name="cwpt_woocommerce_price_title" value="' . esc_attr( $value ) . '" class="regular-text" />';
+			echo '<p class="description"><i>' . esc_html__( 'Here you can set price title for all your products. Also you can use PRICE shortcode as per your requirement. E.g From: PRICE Only/-', 'change-wc-price-title' ) . '</i></p>';
+		}
+
+		/**
+		 * Callback function for Hide price title for all WooCommerce products option on Global settings.
+		 */
+		public function cwpt_hide_price_title_callback() {
+			$value = get_option( 'cwpt_woocommerce_hide_price_title' );
+			echo '<p class="description"><input type="checkbox" id="cwpt_woocommerce_hide_price_title" name="cwpt_woocommerce_hide_price_title" value="1" ' . checked( 1, $value, false ) . ' />';
+			echo '<i>' . esc_html__( 'You can hide price title for all WooCommerce products.', 'change-wc-price-title' ) . '</i></p>';
+		}
+
+		/**
+		 * Callback function for Apply the above settings to all WooCommerce pages option on Global settings.
+		 */
+		public function cwpt_apply_on_all_products_callback() {
+			$value = get_option( 'cwpt_apply_on_all_products' );
+			echo '<p class="description"><input type="checkbox" id="cwpt_apply_on_all_products" name="cwpt_apply_on_all_products" value="1" ' . checked( 1, $value, false ) . ' />';
+			echo '<i>' . esc_html__( 'Enable this if you wish to apply above setting on all WooCommerce Pages.', 'change-wc-price-title' ) . '</i></p>';
+		}
+
+		/**
+		 * Callback function for Show price multiplied by quantity option on Global settings.
+		 */
+		public function cwpt_enable_multiplier_callback() {
+			$value = get_option( 'cwpt_enable_multiplier' );
+			echo '<p class="description"><input type="checkbox" id="cwpt_enable_multiplier" name="cwpt_enable_multiplier" value="1" ' . checked( 1, $value, false ) . ' />';
+			echo '<i>' . esc_html__( 'Enable this if you wish to show price as per the multiply by quantity.', 'change-wc-price-title' ) . '</i></p>';
+		}
+
+		/**
+		 * Callback function registering all options on Global settings.
+		 */
+		public function cwpt_register_settings() {
+			register_setting( 'cwpt_settings_group', 'cwpt_woocommerce_price_title' );
+			register_setting( 'cwpt_settings_group', 'cwpt_woocommerce_hide_price_title' );
+			register_setting( 'cwpt_settings_group', 'cwpt_apply_on_all_products' );
+			register_setting( 'cwpt_settings_group', 'cwpt_enable_multiplier' );
 		}
 
 		/**
@@ -351,7 +397,7 @@ if ( ! class_exists( 'CWPT_Price' ) ) {
 		 */
 		public function cwpt_price_activate() {
 			// Activation code here.
-			update_option( 'change_woocommerce_price_title_db_version', '2.5' );
+			update_option( 'change_woocommerce_price_title_db_version', '2.6' );
 		}
 
 		/**
@@ -363,10 +409,11 @@ if ( ! class_exists( 'CWPT_Price' ) ) {
 
 			$domain = 'change-wc-price-title';
 			$locale = apply_filters( 'plugin_locale', get_locale(), $domain );
-			if ( $loaded = load_textdomain( $domain, trailingslashit( WP_LANG_DIR ) . $domain . '-' . $locale . '.mo' ) ) {
+			$loaded = load_textdomain( $domain, trailingslashit( WP_LANG_DIR ) . $domain . '-' . $locale . '.mo' );
+			if ( $loaded ) {
 				return $loaded;
 			} else {
-				load_plugin_textdomain( $domain, FALSE, basename( dirname( __FILE__ ) ) . '/i18n/languages/' );
+				load_plugin_textdomain( $domain, false, basename( __DIR__ ) . '/i18n/languages/' );
 			}
 		}
 
@@ -436,7 +483,6 @@ if ( ! class_exists( 'CWPT_Price' ) ) {
 				$cwpt_apply_on_all_wc_pages = 'yes';
 			}
 			update_post_meta( $product_id, '_cwpt_apply_on_all_wc_pages', $cwpt_apply_on_all_wc_pages );
-
 		}
 
 		/**
@@ -453,17 +499,16 @@ if ( ! class_exists( 'CWPT_Price' ) ) {
 			$product_id = $product_obj->get_id();
 
 			// Getting option for applicable on all WooCommerce Pages.
-			$cwpt_apply_on_all_wc_pages_value = get_post_meta( $product_id, '_cwpt_apply_on_all_wc_pages', true );			
-			$cwpt_apply_on_all_wc_pages       = ( isset( $cwpt_apply_on_all_wc_pages_value ) && $cwpt_apply_on_all_wc_pages_value != "" ) ? $cwpt_apply_on_all_wc_pages_value : "no";
+			$cwpt_apply_on_all_wc_pages_value = get_post_meta( $product_id, '_cwpt_apply_on_all_wc_pages', true );
+			$cwpt_apply_on_all_wc_pages       = ( isset( $cwpt_apply_on_all_wc_pages_value ) && '' !== $cwpt_apply_on_all_wc_pages_value ) ? $cwpt_apply_on_all_wc_pages_value : 'no';
 
 			// Getting value of Apply on all wc pages from Global Level.
 			$cwpt_apply_on_all_products_value = get_option( 'cwpt_apply_on_all_products' );
-
-			if ( ! is_product() && ( '' == $cwpt_apply_on_all_wc_pages || 'no' == $cwpt_apply_on_all_wc_pages ) ){
-				if ( $cwpt_apply_on_all_products_value != "1" ) {
+			if ( ! is_product() && ( '' === $cwpt_apply_on_all_wc_pages || 'no' === $cwpt_apply_on_all_wc_pages ) ) {
+				if ( '1' !== $cwpt_apply_on_all_products_value ) {
 					return $price;
 				}
-			}				
+			}
 
 			$original_price = $price;
 
@@ -474,7 +519,7 @@ if ( ! class_exists( 'CWPT_Price' ) ) {
 			$global_hide_price = get_option( 'cwpt_woocommerce_hide_price_title' );
 
 			// If Hide Price is enabled then hide all product's prices from WooCommerce Product Page.
-			if ( $global_hide_price == 1 ) {
+			if ( '1' === $global_hide_price ) {
 				$price = '';
 				return $price;
 			}
@@ -483,7 +528,7 @@ if ( ! class_exists( 'CWPT_Price' ) ) {
 			$product_hide_price = get_post_meta( $product_id, '_cwpt_hide_price', true );
 
 			// If Hide Price is enabled then hide all product's prices from WooCommerce Product Page.
-			if ( $product_hide_price == "yes" ) {
+			if ( 'yes' === $product_hide_price ) {
 				$price = '';
 				return $price;
 			}
@@ -495,9 +540,9 @@ if ( ! class_exists( 'CWPT_Price' ) ) {
 			$global_level_set_title = get_option( 'cwpt_woocommerce_price_title' );
 
 			// Setting $price to the text as per the set text in Set price title field at global level.
-			if ( isset( $global_level_set_title ) && $global_level_set_title != "" ) {
+			if ( isset( $global_level_set_title ) && '' !== $global_level_set_title ) {
 
-				if ( strpos( $global_level_set_title, 'PRICE' ) !== false) {
+				if ( strpos( $global_level_set_title, 'PRICE' ) !== false ) {
 					$price = str_replace( 'PRICE', $original_price, $global_level_set_title );
 				} else {
 					$price = $global_level_set_title;
@@ -505,7 +550,7 @@ if ( ! class_exists( 'CWPT_Price' ) ) {
 			}
 
 			// Setting $price to the text as per the set text in Set price title field at product level.
-			if ( isset( $cwpt_price ) && '' != $cwpt_price ) {
+			if ( isset( $cwpt_price ) && '' !== $cwpt_price ) {
 				if ( strpos( $cwpt_price, 'PRICE' ) !== false ) {
 					$price = str_replace( 'PRICE', $original_price, $cwpt_price );
 				} else {

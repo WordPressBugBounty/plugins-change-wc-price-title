@@ -4,12 +4,12 @@ Donate link: https://www.paypal.me/kartikparmar
 Author URI: https://parmarkartik19.wordpress.com/
 Tags: woocommerce price, title, price, change, remove
 Requires at least: 5.3
-Tested up to: 6.5
-Stable tag: 2.5
+Tested up to: 6.6.2
+Stable tag: trunk
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-This easy-to-use plugin allows WooCommerce store owners to change the WooCommerce Price Title. Also, it is possible to hide the price and option apply the settings on individial or all WooCommerce pages.
+This easy-to-use plugin allows WooCommerce store owners to change the WooCommerce Price Title. Also, it is possible to hide the price and option to apply the settings on individual or all WooCommerce pages.
 
 == Description ==
 
@@ -76,6 +76,13 @@ Method 2:
 3. Same settings is you wish to apply on all your WooCommerce products. 
 
 == Changelog ==
+
+= 2.6 (19.10.2024) =
+
+* Compatibility with WordPress 6.6.2 & WooCommerce 9.3.3.
+* PHPCS related changes.
+* Some code improvements.
+* Updated Freemius SDK.
 
 = 2.5 (17.04.2024) =
 
