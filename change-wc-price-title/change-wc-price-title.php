@@ -3,15 +3,16 @@
  * Plugin Name:          Change Price Title for WooCommerce
  * Plugin URI:           https://kartechify.com/product/change-woocommerce-price-title/
  * Description:          This plugin allows you to change the WooCommerce Price Title. E.g From: $100/- Only. You can completely change the price title or set caption to price. Also, you can hide price titles on the WooCommerce Product page or on all WooCommerce pages.
- * Version:              2.6
+ * Version:              2.7
  * Author:               Kartik Parmar
  * Author URI:           https://www.kartechify.com
  * Text Domain:          change-wc-price-title
  * Domain Path:          /i18n/languages/
  * Requires PHP:         7.3
- * Tested up to:         6.6.2
+ * Tested up to:         6.8
  * WC requires at least: 3.0.0
- * WC tested up to:      9.3.3
+ * WC tested up to:      10.0
+ * License:              GPL v2 or later
  * Requires Plugins:     woocommerce
  *
  * @package Change_WooCommerce_Price_Title
@@ -27,7 +28,7 @@ if ( ! function_exists( 'cwpt_fs' ) ) {
 
 		if ( ! isset( $cwpt_fs ) ) {
 			// Include Freemius SDK.
-			require_once __DIR__ . '/freemius/start.php';
+			require_once __DIR__ . '/vendor/freemius/start.php';
 
 			$cwpt_fs = fs_dynamic_init(
 				array(
@@ -340,10 +341,49 @@ if ( ! class_exists( 'CWPT_Price' ) ) {
 		 * Callback function registering all options on Global settings.
 		 */
 		public function cwpt_register_settings() {
-			register_setting( 'cwpt_settings_group', 'cwpt_woocommerce_price_title' );
-			register_setting( 'cwpt_settings_group', 'cwpt_woocommerce_hide_price_title' );
-			register_setting( 'cwpt_settings_group', 'cwpt_apply_on_all_products' );
-			register_setting( 'cwpt_settings_group', 'cwpt_enable_multiplier' );
+
+			register_setting(
+				'cwpt_settings_group',
+				'cwpt_woocommerce_price_title',
+				array(
+					'sanitize_callback' => 'sanitize_text_field',
+				)
+			);
+
+			register_setting(
+				'cwpt_settings_group',
+				'cwpt_woocommerce_hide_price_title',
+				array(
+					'sanitize_callback' => array( $this, 'cwpt_sanitize_checkbox' ),
+				)
+			);
+
+			register_setting(
+				'cwpt_settings_group',
+				'cwpt_enable_multiplier',
+				array(
+					'sanitize_callback' => array( $this, 'cwpt_sanitize_checkbox' ),
+				)
+			);
+
+			register_setting(
+				'cwpt_settings_group',
+				'cwpt_apply_on_all_products',
+				array(
+					'sanitize_callback' => array( $this, 'cwpt_sanitize_checkbox' ),
+				)
+			);
+		}
+
+		/**
+		 * Sanitize checkbox input.
+		 *
+		 * @param mixed $value Value to sanitize.
+		 * @return string Sanitized value.
+		 */
+		public function cwpt_sanitize_checkbox( $value ) {
+			// Ensure the checkbox returns either 1 or 0.
+			return $value === '1' ? '1' : '0';
 		}
 
 		/**
@@ -397,7 +437,7 @@ if ( ! class_exists( 'CWPT_Price' ) ) {
 		 */
 		public function cwpt_price_activate() {
 			// Activation code here.
-			update_option( 'change_woocommerce_price_title_db_version', '2.6' );
+			update_option( 'change_woocommerce_price_title_db_version', '2.7' );
 		}
 
 		/**

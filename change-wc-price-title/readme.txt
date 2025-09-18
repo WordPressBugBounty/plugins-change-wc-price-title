@@ -4,8 +4,8 @@ Donate link: https://www.paypal.me/kartikparmar
 Author URI: https://parmarkartik19.wordpress.com/
 Tags: woocommerce price, title, price, change, remove
 Requires at least: 5.3
-Tested up to: 6.6.2
-Stable tag: trunk
+Tested up to: 6.8
+Stable tag: 2.7
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 

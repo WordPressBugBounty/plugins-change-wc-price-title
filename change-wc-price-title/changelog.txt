@@ -1,0 +1,69 @@
+*** Change Price Title for WooCommerce ***
+
+= 2.7 - 2025-09-18 =
+* Compatibility - Tested with WordPress 6.8.2 and WooCommerce 10.1.2
+
+2024-10-19 - version 2.6.0
+* Compatibility - Tested with WordPress 6.6.2 and WooCommerce 9.3.3.
+* Changed - Applied PHPCS coding standards.
+* Improved - General code improvements.
+* Updated - Freemius SDK.
+
+2024-04-17 - version 2.5.0
+* Fixed - Incorrect JS file URL.
+* Updated - Plugin translation files.
+* Compatibility - Tested with WordPress 6.5 and WooCommerce 8.7.0.
+
+2024-01-05 - version 2.4.0
+* Security - Fixed Cross-Site Scripting (XSS) vulnerability.
+
+2023-07-08 - version 2.3.0
+* Fixed - Incompatibility notice shown on the WooCommerce Features page.
+
+2023-07-08 - version 2.2.0
+* Compatibility - Added support for WooCommerce High-Performance Order Storage (HPOS).
+* Compatibility - Tested with WooCommerce 7.8.
+* Compatibility - Tested with WordPress 6.2.
+
+2022-04-30 - version 2.1.0
+* Security - Security update.
+
+2022-01-29 - version 2.0.0
+* Compatibility - Tested with WordPress 5.9.
+* Compatibility - Tested with WooCommerce 6.0 and higher.
+
+2021-03-25 - version 1.9.0
+* Security - Security update.
+
+2021-02-13 - version 1.8.0
+* Fixed - WordPress 5.6 editor issue when plugin was active.
+
+2020-08-28 - version 1.7.0
+* Compatibility - Tested with WooCommerce 4.4.
+
+2020-06-23 - version 1.6.0
+* Compatibility - Tested with WooCommerce 4.2.
+
+2020-04-18 - version 1.5.0
+* Added - Freemius SDK integration.
+
+2020-04-16 - version 1.4.0
+* Compatibility - Tested with WooCommerce 4.0.
+* Changed - Localization improvements.
+* Changed - WPCS compliance.
+
+2019-09-31 - version 1.3.0
+* Added - Option to show price multiplied by quantity.
+* Fixed - Price was being multiplied in the mini cart.
+
+2018-09-30 - version 1.2.0
+* Changed - Price amount now updates based on selected quantity.
+* Fixed - PHP warnings appearing in the admin area.
+
+2017-07-30 - version 1.1.0
+* Added - Option to hide price title.
+* Added - Option to change/hide price only on Product Page or all WooCommerce pages.
+* Added - Ability to set/hide price title for all WooCommerce products.
+
+2017-06-24 - version 1.0.0
+* Initial release.
