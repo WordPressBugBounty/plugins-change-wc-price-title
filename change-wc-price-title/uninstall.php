@@ -44,6 +44,7 @@ if ( is_multisite() ) {
 	delete_option( 'cwpt_apply_on_all_products' );
 	delete_option( 'cwpt_enable_multiplier' );
 	delete_option( 'change_woocommerce_price_title_db_version' );
+	delete_option( 'cwpt_show_migration_notice' );
 }
 
 // Clear any cached data that has been removed.

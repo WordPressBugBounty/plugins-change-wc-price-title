@@ -1,82 +1,30 @@
 <?php 
 /**
  * Plugin Name:          Change Price Title for WooCommerce
- * Plugin URI:           https://kartechify.com/product/change-woocommerce-price-title/
- * Description:          This plugin allows you to change the WooCommerce Price Title. E.g From: $100/- Only. You can completely change the price title or set caption to price. Also, you can hide price titles on the WooCommerce Product page or on all WooCommerce pages.
- * Version:              2.7
- * Author:               Kartik Parmar
- * Author URI:           https://www.kartechify.com
+ * Plugin URI:           https://woocommerce.com/products/change-wc-price-title
+ * Description:          Easily change WooCommerce price title, e.g. 'From: $100/- Only', or hide them site-wide.
+ * Version:              2.8
+ * Author:               Kartechify
+ * Author URI:           https://woocommerce.com/vendor/kartechify/
  * Text Domain:          change-wc-price-title
  * Domain Path:          /i18n/languages/
  * Requires PHP:         7.3
- * Tested up to:         6.8
+ * Tested up to:         6.9
  * WC requires at least: 3.0.0
- * WC tested up to:      10.0
+ * WC tested up to:      10.4.3
  * License:              GPL v2 or later
  * Requires Plugins:     woocommerce
  *
  * @package Change_WooCommerce_Price_Title
  */
 
-if ( ! function_exists( 'cwpt_fs' ) ) {
-
-	/**
-	 * Create a helper function for easy SDK access.
-	 */
-	function cwpt_fs() {
-		global $cwpt_fs;
-
-		if ( ! isset( $cwpt_fs ) ) {
-			// Include Freemius SDK.
-			require_once __DIR__ . '/vendor/freemius/start.php';
-
-			$cwpt_fs = fs_dynamic_init(
-				array(
-					'id'             => '5909',
-					'slug'           => 'change-wc-price-title',
-					'type'           => 'plugin',
-					'public_key'     => 'pk_0b2743f102b17335928ef84f4726c',
-					'is_premium'     => false,
-					'has_addons'     => false,
-					'has_paid_plans' => false,
-					'menu'           => array(
-						'slug'           => 'woocommerce_price_title',
-						'override_exact' => true,
-						'account'        => false,
-						'contact'        => false,
-						'parent'         => array(
-							'slug' => 'woocommerce',
-						),
-					),
-				)
-			);
-		}
-
-		return $cwpt_fs;
-	}
-
-	// Init Freemius.
-	cwpt_fs();
-	// Signal that SDK was initiated.
-	do_action( 'cwpt_fs_loaded' );
-	/**
-	 * Settings page.
-	 */
-	function cwpt_fs_settings_url() {
-		return admin_url( 'admin.php?page=woocommerce_price_title' );
-	}
-
-	cwpt_fs()->add_filter( 'connect_url', 'cwpt_fs_settings_url' );
-	cwpt_fs()->add_filter( 'after_skip_url', 'cwpt_fs_settings_url' );
-	cwpt_fs()->add_filter( 'after_connect_url', 'cwpt_fs_settings_url' );
-	cwpt_fs()->add_filter( 'after_pending_connect_url', 'cwpt_fs_settings_url' );
-}
-
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
 use Automattic\WooCommerce\Utilities\OrderUtil;
+
+define( 'CWPT_VERSION', '2.8' );
 
 if ( ! class_exists( 'CWPT_Price' ) ) {
 
@@ -93,18 +41,18 @@ if ( ! class_exists( 'CWPT_Price' ) ) {
 		public function __construct() {
 
 			add_action( 'admin_init', array( &$this, 'cwpt_check_compatibility' ) );
+			add_action( 'admin_init', array( &$this, 'cwpt_check_migration' ) );
+			add_action( 'admin_notices', array( &$this, 'cwpt_migration_notice' ) );
+			add_action( 'wp_ajax_cwpt_dismiss_migration_notice', array( &$this, 'cwpt_dismiss_migration_notice' ) );
 
 			add_action( 'woocommerce_product_options_advanced', array( &$this, 'cwpt_adding_set_price_title_field' ), 10, 1 );
 			add_action( 'woocommerce_process_product_meta', array( &$this, 'cwpt_woocommerce_process_product_meta_simple' ), 10, 1 );
 			add_filter( 'woocommerce_get_price_html', array( &$this, 'cwpt_change_woocommerce_price_title' ), 99, 2 );
 
 			register_activation_hook( __FILE__, array( &$this, 'cwpt_price_activate' ) ); // Initialize settings.
-			add_action( 'init', array( &$this, 'cwpt_price_update_po_file' ) );// Language Translation.
-			add_action( 'admin_menu', array( &$this, 'cwpt_admin_menu' ) ); // WordPress Administration Menu.
 
-			add_action( 'admin_init', array( $this, 'cwpt_add_settings_fields' ) );
-			add_action( 'admin_init', array( $this, 'cwpt_register_settings' ) );
-			add_action( 'admin_init', array( $this, 'cwpt_add_settings_section' ) );
+			// Add settings to WooCommerce Settings.
+			add_filter( 'woocommerce_get_settings_pages', array( &$this, 'cwpt_add_settings_page' ) );
 
 			// Including styles and scripts.
 			add_action( 'wp_enqueue_scripts', array( &$this, 'cwpt_add_scripts' ) );
@@ -112,6 +60,50 @@ if ( ! class_exists( 'CWPT_Price' ) ) {
 			add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), array( &$this, 'cwpt_plugin_settings_link' ) );
 
 			add_action( 'before_woocommerce_init', array( &$this, 'cwpt_custom_order_tables_compatibility' ), 999 );
+
+			add_action( 'admin_enqueue_scripts', array( $this, 'cwpt_enqueue_admin_scripts' ) );
+
+		}
+
+		public function cwpt_enqueue_admin_scripts( $hook ) {
+
+			// Load only in admin.
+			if ( ! is_admin() ) {
+				return;
+			}
+
+			if ( '1' === get_option( 'cwpt_show_migration_notice', '0' ) ) {
+				return;
+			}
+
+			wp_enqueue_script(
+				'cwpt-admin-notice',
+				plugin_dir_url( __FILE__ ) . 'assets/js/cwpt-admin-notice.js',
+				array( 'jquery' ),
+				CWPT_VERSION,
+				true
+			);
+
+			wp_localize_script(
+				'cwpt-admin-notice',
+				'cwptNotice',
+				array(
+					'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+					'nonce'   => wp_create_nonce( 'cwpt_dismiss_notice' ),
+				)
+			);
+		}
+
+		/**
+		 * Add custom settings page to WooCommerce Settings.
+		 *
+		 * @param array $settings Existing settings pages.
+		 * @return array Modified settings pages.
+		 * @since 2.8
+		 */
+		public function cwpt_add_settings_page( $settings ) {
+			$settings[] = include dirname( __FILE__ ) . '/includes/class-cwpt-settings.php';
+			return $settings;
 		}
 
 		/**
@@ -121,9 +113,10 @@ if ( ! class_exists( 'CWPT_Price' ) ) {
 		 */
 		public function cwpt_custom_order_tables_compatibility() {
 			if ( class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' ) ) {
-				\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', 'change-wc-price-title/change-wc-price-title.php', true );
-				\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'orders_cache', 'change-wc-price-title/change-wc-price-title.php', true );
-				\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'product_block_editor', 'change-wc-price-title/change-wc-price-title.php', true );
+				\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, true );
+				\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'orders_cache', __FILE__, true );
+				\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'product_block_editor', __FILE__, true );
+				\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'cart_checkout_blocks', __FILE__, true );
 			}
 		}
 
@@ -144,7 +137,7 @@ if ( ! class_exists( 'CWPT_Price' ) ) {
 
 			if ( 'product' === get_post_type( $post_id ) ) {
 				$cwpt_enable_multiplier = get_option( 'cwpt_enable_multiplier', '' );
-				if ( '1' !== $cwpt_enable_multiplier ) {
+				if ( 'yes' !== $cwpt_enable_multiplier && '1' !== $cwpt_enable_multiplier ) {
 					return;
 				}
 
@@ -184,7 +177,7 @@ if ( ! class_exists( 'CWPT_Price' ) ) {
 				wp_register_script(
 					'cwpt-price-title',
 					plugin_dir_url( __FILE__ ) . 'assets/js/cwpt-price-title.js',
-					'',
+					array(),
 					$cwpt_plugin_version_number,
 					false
 				);
@@ -208,185 +201,6 @@ if ( ! class_exists( 'CWPT_Price' ) ) {
 		}
 
 		/**
-		 * Adding submenu under WooCommerce menu.
-		 */
-		public function cwpt_admin_menu() {
-			add_submenu_page(
-				'woocommerce',
-				__( 'Price Title ', 'change-wc-price-title' ),
-				__( 'WooCommerce Price Title', 'change-wc-price-title' ),
-				'manage_woocommerce', // phpcs:ignore
-				'woocommerce_price_title',
-				array( &$this, 'cwpt_menu_page' )
-			);
-		}
-
-		/**
-		 * Callback action for submenu.
-		 */
-		public function cwpt_menu_page() {
-			global $wpdb;
-
-			// Check the user capabilities.
-			if ( ! current_user_can( 'manage_woocommerce' ) ) { //phpcs:ignore
-				wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'change-wc-price-title' ) );
-			}
-			settings_errors();
-			?>
-				<div class="wrap">
-					<form method="post" action="options.php">
-						<?php
-						settings_fields( 'cwpt_settings_group' );
-						do_settings_sections( 'cwpt_settings_page' );
-						submit_button();
-						?>
-					</form>
-				</div>
-				<?php
-		}
-
-		/**
-		 * Callback for showing page heading on Global settings.
-		 */
-		public function cwpt_add_settings_section() {
-			add_settings_section(
-				'cwpt_settings_section',
-				__( 'WooCommerce Price Title Settings', 'change-wc-price-title' ),
-				array( $this, 'cwpt_section_callback' ),
-				'cwpt_settings_page'
-			);
-		}
-
-		/**
-		 * Callback showing page description on Global settings.
-		 */
-		public function cwpt_section_callback() {
-			echo '<p>' . esc_html__( 'Configure the price title settings for WooCommerce Product Price.', 'change-wc-price-title' ) . '</p>';
-		}
-
-		/**
-		 * Callback for adding the fields on Global settings.
-		 */
-		public function cwpt_add_settings_fields() {
-			add_settings_field(
-				'cwpt_woocommerce_price_title',
-				__( 'Change Price Title For All Products', 'change-wc-price-title' ),
-				array( $this, 'cwpt_price_title_callback' ),
-				'cwpt_settings_page',
-				'cwpt_settings_section'
-			);
-
-			add_settings_field(
-				'cwpt_woocommerce_hide_price_title',
-				__( 'Hide Price Title', 'change-wc-price-title' ),
-				array( $this, 'cwpt_hide_price_title_callback' ),
-				'cwpt_settings_page',
-				'cwpt_settings_section'
-			);
-
-			add_settings_field(
-				'cwpt_apply_on_all_products',
-				__( 'Apply Above Options On All WooCommerce Pages', 'change-wc-price-title' ),
-				array( $this, 'cwpt_apply_on_all_products_callback' ),
-				'cwpt_settings_page',
-				'cwpt_settings_section'
-			);
-
-			add_settings_field(
-				'cwpt_enable_multiplier',
-				__( 'Enable to show price by multiplying with quantity', 'change-wc-price-title' ),
-				array( $this, 'cwpt_enable_multiplier_callback' ),
-				'cwpt_settings_page',
-				'cwpt_settings_section'
-			);
-		}
-
-		/**
-		 * Callback function for Set price title for all products option on Global settings.
-		 */
-		public function cwpt_price_title_callback() {
-			$value = get_option( 'cwpt_woocommerce_price_title' );
-			echo '<input type="text" id="cwpt_woocommerce_price_title" name="cwpt_woocommerce_price_title" value="' . esc_attr( $value ) . '" class="regular-text" />';
-			echo '<p class="description"><i>' . esc_html__( 'Here you can set price title for all your products. Also you can use PRICE shortcode as per your requirement. E.g From: PRICE Only/-', 'change-wc-price-title' ) . '</i></p>';
-		}
-
-		/**
-		 * Callback function for Hide price title for all WooCommerce products option on Global settings.
-		 */
-		public function cwpt_hide_price_title_callback() {
-			$value = get_option( 'cwpt_woocommerce_hide_price_title' );
-			echo '<p class="description"><input type="checkbox" id="cwpt_woocommerce_hide_price_title" name="cwpt_woocommerce_hide_price_title" value="1" ' . checked( 1, $value, false ) . ' />';
-			echo '<i>' . esc_html__( 'You can hide price title for all WooCommerce products.', 'change-wc-price-title' ) . '</i></p>';
-		}
-
-		/**
-		 * Callback function for Apply the above settings to all WooCommerce pages option on Global settings.
-		 */
-		public function cwpt_apply_on_all_products_callback() {
-			$value = get_option( 'cwpt_apply_on_all_products' );
-			echo '<p class="description"><input type="checkbox" id="cwpt_apply_on_all_products" name="cwpt_apply_on_all_products" value="1" ' . checked( 1, $value, false ) . ' />';
-			echo '<i>' . esc_html__( 'Enable this if you wish to apply above setting on all WooCommerce Pages.', 'change-wc-price-title' ) . '</i></p>';
-		}
-
-		/**
-		 * Callback function for Show price multiplied by quantity option on Global settings.
-		 */
-		public function cwpt_enable_multiplier_callback() {
-			$value = get_option( 'cwpt_enable_multiplier' );
-			echo '<p class="description"><input type="checkbox" id="cwpt_enable_multiplier" name="cwpt_enable_multiplier" value="1" ' . checked( 1, $value, false ) . ' />';
-			echo '<i>' . esc_html__( 'Enable this if you wish to show price as per the multiply by quantity.', 'change-wc-price-title' ) . '</i></p>';
-		}
-
-		/**
-		 * Callback function registering all options on Global settings.
-		 */
-		public function cwpt_register_settings() {
-
-			register_setting(
-				'cwpt_settings_group',
-				'cwpt_woocommerce_price_title',
-				array(
-					'sanitize_callback' => 'sanitize_text_field',
-				)
-			);
-
-			register_setting(
-				'cwpt_settings_group',
-				'cwpt_woocommerce_hide_price_title',
-				array(
-					'sanitize_callback' => array( $this, 'cwpt_sanitize_checkbox' ),
-				)
-			);
-
-			register_setting(
-				'cwpt_settings_group',
-				'cwpt_enable_multiplier',
-				array(
-					'sanitize_callback' => array( $this, 'cwpt_sanitize_checkbox' ),
-				)
-			);
-
-			register_setting(
-				'cwpt_settings_group',
-				'cwpt_apply_on_all_products',
-				array(
-					'sanitize_callback' => array( $this, 'cwpt_sanitize_checkbox' ),
-				)
-			);
-		}
-
-		/**
-		 * Sanitize checkbox input.
-		 *
-		 * @param mixed $value Value to sanitize.
-		 * @return string Sanitized value.
-		 */
-		public function cwpt_sanitize_checkbox( $value ) {
-			// Ensure the checkbox returns either 1 or 0.
-			return $value === '1' ? '1' : '0';
-		}
-
-		/**
 		 * Ensure that the plugin is deactivated when WooCommerce is deactivated.
 		 *
 		 * @since 1.0
@@ -404,6 +218,102 @@ if ( ! class_exists( 'CWPT_Price' ) ) {
 					}
 				}
 			}
+		}
+
+		/**
+		 * Check if migration is needed for existing users
+		 *
+		 * @since 2.8
+		 */
+		public function cwpt_check_migration() {
+			$current_version = get_option( 'change_woocommerce_price_title_db_version', '0' );
+
+			// Only run migration once
+			if ( version_compare( $current_version, '2.8', '<' ) ) {
+				// Check if this is an existing user (has any settings saved)
+				$has_existing_settings = false;
+				$checkboxes = array(
+					'cwpt_woocommerce_hide_price_title',
+					'cwpt_apply_on_all_products',
+					'cwpt_enable_multiplier',
+				);
+
+				foreach ( $checkboxes as $checkbox ) {
+					if ( get_option( $checkbox, false ) !== false ) {
+						$has_existing_settings = true;
+						break;
+					}
+				}
+
+				// Also check if price title text is set
+				if ( get_option( 'cwpt_woocommerce_price_title', '' ) !== '' ) {
+					$has_existing_settings = true;
+				}
+
+				// If existing user, set flag to show migration notice
+				if ( $has_existing_settings ) {
+					update_option( 'cwpt_show_migration_notice', '1' );
+				}
+				
+				$this->cwpt_migrate_checkbox_values();
+				update_option( 'change_woocommerce_price_title_db_version', '2.8' );
+			}
+		}
+
+		/**
+		 * Display migration notice for existing users
+		 *
+		 * @since 2.8
+		 */
+		public function cwpt_migration_notice() {
+
+			// Check if user has permission to see this notice
+			if ( ! current_user_can( 'manage_woocommerce' ) ) {
+				return;
+			}
+
+			// Check if notice should be shown
+			$show_notice = get_option( 'cwpt_show_migration_notice', '0' );
+
+			if ( '1' === $show_notice ) {
+				return;
+			}
+
+			$settings_url = admin_url( 'admin.php?page=wc-settings&tab=price_title' );
+			?>
+			<div class="notice notice-info is-dismissible" id="cwpt-migration-notice">
+				<p>
+					<strong><?php esc_html_e( 'Change Price Title for WooCommerce', 'change-wc-price-title' ); ?></strong>
+				</p>
+				<p>
+					<?php
+					printf(
+						/* translators: %s: Settings page URL */
+						esc_html__( 'The plugin settings are now available under %s.', 'change-wc-price-title' ),
+						'<a href="' . esc_url( $settings_url ) . '"><strong>' . esc_html__( 'WooCommerce → Settings → Price Title', 'change-wc-price-title' ) . '</strong></a>'
+					);
+					?>
+				</p>
+			</div>
+			<?php
+		}
+
+		/**
+		 * AJAX handler to dismiss migration notice
+		 *
+		 * @since 2.8
+		 */
+		public function cwpt_dismiss_migration_notice() {
+
+			check_ajax_referer( 'cwpt_dismiss_notice', 'nonce' );
+
+			if ( ! current_user_can( 'manage_woocommerce' ) ) {
+				wp_send_json_error();
+			}
+
+			update_option( 'cwpt_show_migration_notice', '1' );
+
+			wp_send_json_success();
 		}
 
 		/**
@@ -425,35 +335,53 @@ if ( ! class_exists( 'CWPT_Price' ) ) {
 		public static function cwpt_disabled_notice() {
 
 			$class   = 'notice notice-error';
-			$message = __( 'Change Price Title for WooCommerce requires WooCommerce installed and activate.', 'change-wc-price-title' );
+			$message = __( 'Change Price Title for WooCommerce requires WooCommerce to be installed and activated.', 'change-wc-price-title' );
 
-			printf( '<div class="%1$s"><p>%2$s</p></div>', $class, $message ); // phpcs:ignore
+			printf(
+				'<div class="%1$s"><p>%2$s</p></div>',
+				esc_attr( $class ),
+				esc_html( $message )
+			);
 		}
 
 		/**
-		 * Version Saving
+		 * Version Saving and Migration
 		 *
 		 * @since 1.0
 		 */
 		public function cwpt_price_activate() {
 			// Activation code here.
-			update_option( 'change_woocommerce_price_title_db_version', '2.7' );
+			$current_version = get_option( 'change_woocommerce_price_title_db_version', '0' );
+
+			// Migrate checkbox values from '1'/'0' to 'yes'/'no' for WooCommerce compatibility.
+			if ( version_compare( $current_version, '2.8', '<' ) ) {
+				$this->cwpt_migrate_checkbox_values();
+			}
+
+			update_option( 'change_woocommerce_price_title_db_version', '2.8' );
 		}
 
 		/**
-		 * Language Translation
+		 * Migrate checkbox values from old format to WooCommerce format
 		 *
-		 * @since 1.0
+		 * @since 2.8
 		 */
-		public function cwpt_price_update_po_file() {
+		private function cwpt_migrate_checkbox_values() {
+			$checkboxes = array(
+				'cwpt_woocommerce_hide_price_title',
+				'cwpt_apply_on_all_products',
+				'cwpt_enable_multiplier',
+			);
 
-			$domain = 'change-wc-price-title';
-			$locale = apply_filters( 'plugin_locale', get_locale(), $domain );
-			$loaded = load_textdomain( $domain, trailingslashit( WP_LANG_DIR ) . $domain . '-' . $locale . '.mo' );
-			if ( $loaded ) {
-				return $loaded;
-			} else {
-				load_plugin_textdomain( $domain, false, basename( __DIR__ ) . '/i18n/languages/' );
+			foreach ( $checkboxes as $checkbox ) {
+				$value = get_option( $checkbox, '' );
+				
+				// Convert '1' to 'yes' and anything else to 'no'
+				if ( '1' === $value || 'yes' === $value ) {
+					update_option( $checkbox, 'yes' );
+				} else {
+					update_option( $checkbox, 'no' );
+				}
 			}
 		}
 
@@ -511,7 +439,7 @@ if ( ! class_exists( 'CWPT_Price' ) ) {
 			$cwpt_apply_on_all_wc_pages = 'no';
 
 			if ( isset( $_POST['_cwpt_price_title'] ) ) { // phpcs:ignore
-				update_post_meta( $product_id, '_cwpt_price_title', sanitize_text_field( wp_unslash( $_POST['_cwpt_price_title'] ) ) ); // phpcs:ignore
+				update_post_meta( $product_id, '_cwpt_price_title', wp_kses_post( wp_unslash( $_POST['_cwpt_price_title'] ) ) ); // phpcs:ignore
 			}
 
 			if ( isset( $_POST['_cwpt_hide_price'] ) && 'yes' === $_POST['_cwpt_hide_price'] ) { // phpcs:ignore
@@ -545,7 +473,7 @@ if ( ! class_exists( 'CWPT_Price' ) ) {
 			// Getting value of Apply on all wc pages from Global Level.
 			$cwpt_apply_on_all_products_value = get_option( 'cwpt_apply_on_all_products' );
 			if ( ! is_product() && ( '' === $cwpt_apply_on_all_wc_pages || 'no' === $cwpt_apply_on_all_wc_pages ) ) {
-				if ( '1' !== $cwpt_apply_on_all_products_value ) {
+				if ( 'yes' !== $cwpt_apply_on_all_products_value && '1' !== $cwpt_apply_on_all_products_value ) {
 					return $price;
 				}
 			}
@@ -559,7 +487,7 @@ if ( ! class_exists( 'CWPT_Price' ) ) {
 			$global_hide_price = get_option( 'cwpt_woocommerce_hide_price_title' );
 
 			// If Hide Price is enabled then hide all product's prices from WooCommerce Product Page.
-			if ( '1' === $global_hide_price ) {
+			if ( 'yes' === $global_hide_price || '1' === $global_hide_price ) {
 				$price = '';
 				return $price;
 			}
@@ -598,7 +526,7 @@ if ( ! class_exists( 'CWPT_Price' ) ) {
 				}
 			}
 
-			return $price;
+			return wp_kses_post( $price );
 		}
 
 		/**
@@ -613,7 +541,7 @@ if ( ! class_exists( 'CWPT_Price' ) ) {
 		public function cwpt_plugin_settings_link( $links ) {
 
 			$settings_text            = __( 'Settings', 'change-wc-price-title' );
-			$setting_link['settings'] = '<a href="' . esc_url( get_admin_url( null, 'admin.php?page=woocommerce_price_title' ) ) . '">' . $settings_text . '</a>';
+			$setting_link['settings'] = '<a href="' . esc_url( admin_url( 'admin.php?page=wc-settings&tab=price_title' ) ) . '">' . $settings_text . '</a>';
 			$links                    = $setting_link + $links;
 			return $links;
 		}
