@@ -3,15 +3,15 @@
  * Plugin Name:          Change Price Title for WooCommerce
  * Plugin URI:           https://woocommerce.com/products/change-wc-price-title
  * Description:          Easily change WooCommerce price title, e.g. 'From: $100/- Only', or hide them site-wide.
- * Version:              2.8
+ * Version:              2.9
  * Author:               Kartechify
  * Author URI:           https://woocommerce.com/vendor/kartechify/
  * Text Domain:          change-wc-price-title
  * Domain Path:          /i18n/languages/
  * Requires PHP:         7.3
- * Tested up to:         6.9
+ * Tested up to:         6.9.4
  * WC requires at least: 3.0.0
- * WC tested up to:      10.4.3
+ * WC tested up to:      10.6.2
  * License:              GPL v2 or later
  * Requires Plugins:     woocommerce
  *
@@ -24,7 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 use Automattic\WooCommerce\Utilities\OrderUtil;
 
-define( 'CWPT_VERSION', '2.8' );
+define( 'CWPT_VERSION', '2.9' );
 
 if ( ! class_exists( 'CWPT_Price' ) ) {
 
@@ -256,7 +256,7 @@ if ( ! class_exists( 'CWPT_Price' ) ) {
 				}
 				
 				$this->cwpt_migrate_checkbox_values();
-				update_option( 'change_woocommerce_price_title_db_version', '2.8' );
+				update_option( 'change_woocommerce_price_title_db_version', '2.9' );
 			}
 		}
 
@@ -358,7 +358,7 @@ if ( ! class_exists( 'CWPT_Price' ) ) {
 				$this->cwpt_migrate_checkbox_values();
 			}
 
-			update_option( 'change_woocommerce_price_title_db_version', '2.8' );
+			update_option( 'change_woocommerce_price_title_db_version', '2.9' );
 		}
 
 		/**

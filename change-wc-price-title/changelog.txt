@@ -1,5 +1,8 @@
 === Change Price Title ===
 
+2026-04-03 - version 2.9
+* Tested with WordPress 6.9.4 and WooCommerce 10.6.2
+
 2026-02-02 - version 2.8
 * Code changes according to WooCommerce Marketplace.
 
