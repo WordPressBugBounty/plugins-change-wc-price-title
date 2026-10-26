@@ -1,0 +1,180 @@
+# Copyright (C) 2026 Kartechify
+# This file is distributed under the GPL v2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Change Price Title for WooCommerce 3.1\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/change-wc-price-title\n"
+"Last-Translator: Kartechify\n"
+"Language-Team: Japanese\n"
+"Language: ja\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-10-23T16:17:02+00:00\n"
+"PO-Revision-Date: 2026-10-23 00:00+0000\n"
+"X-Generator: WP-CLI 2.11.0\n"
+"X-Domain: change-wc-price-title\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#. Plugin Name of the plugin
+#: change-wc-price-title.php change-wc-price-title.php:257
+msgid "Change Price Title for WooCommerce"
+msgstr "Change Price Title for WooCommerce"
+
+#. Plugin URI of the plugin
+#: change-wc-price-title.php
+msgid "https://woocommerce.com/products/change-wc-price-title"
+msgstr "https://woocommerce.com/products/change-wc-price-title"
+
+#. Description of the plugin
+#: change-wc-price-title.php
+msgid "Easily change WooCommerce price title, e.g. 'From: $100/- Only', or hide them site-wide."
+msgstr "WooCommerce の価格タイトルを簡単に変更したり (例: 「$100/- から」)、サイト全体で非表示にしたりできます。"
+
+#. Author of the plugin
+#: change-wc-price-title.php
+msgid "Kartechify"
+msgstr "Kartechify"
+
+#. Author URI of the plugin
+#: change-wc-price-title.php
+msgid "https://woocommerce.com/vendor/kartechify/"
+msgstr "https://woocommerce.com/vendor/kartechify/"
+
+#. translators: 1: unit price, 2: quantity, 3: total price
+#: change-wc-price-title.php:207
+msgid "%1$s x %2$s = %3$s"
+msgstr "%1$s x %2$s = %3$s"
+
+#. translators: %s: Settings page URL
+#: change-wc-price-title.php:263
+msgid "The plugin settings are now available under %s."
+msgstr "プラグインの設定は %s から利用できるようになりました。"
+
+#: change-wc-price-title.php:264
+msgid "WooCommerce → Settings → Price Title"
+msgstr "WooCommerce → 設定 → 価格タイトル"
+
+#: change-wc-price-title.php:316
+msgid "Change Price Title for WooCommerce requires WooCommerce to be installed and activated."
+msgstr "Change Price Title for WooCommerce を使用するには、WooCommerce をインストールして有効化する必要があります。"
+
+#: change-wc-price-title.php:386
+msgid "Set price title"
+msgstr "価格タイトルを設定"
+
+#: change-wc-price-title.php:388
+msgid "Here you can set the text for WooCommerce Price title as per your requirement. Use PRICE shortcode to include original price in title. E.g From PRICE"
+msgstr "WooCommerce の価格タイトルのテキストを必要に応じて設定できます。元の価格をタイトルに含めるには PRICE コードを使用します。例: PRICE から"
+
+#: change-wc-price-title.php:396
+msgid "Hide Price?"
+msgstr "価格を非表示にする"
+
+#: change-wc-price-title.php:398
+msgid "Hide Price WooCommerce Product Page"
+msgstr "WooCommerce の商品ページで価格を非表示にします"
+
+#: change-wc-price-title.php:406
+msgid "Applicable on all WooCommerce Pages"
+msgstr "すべての WooCommerce ページに適用"
+
+#: change-wc-price-title.php:408
+msgid "Enable to apply the set and hide price option to all WooCommerce pages."
+msgstr "有効にすると、設定したタイトルと価格非表示オプションをすべての WooCommerce ページに適用します。"
+
+#: change-wc-price-title.php:545
+msgid "Settings"
+msgstr "設定"
+
+#: includes/class-cwpt-settings.php:25
+msgid "Price Title"
+msgstr "価格タイトル"
+
+#: includes/class-cwpt-settings.php:38
+msgid "WooCommerce Price Title Settings"
+msgstr "WooCommerce 価格タイトル設定"
+
+#: includes/class-cwpt-settings.php:40
+msgid "Configure the price title settings for WooCommerce Product Price."
+msgstr "WooCommerce の商品価格に使用する価格タイトルを設定します。"
+
+#: includes/class-cwpt-settings.php:45
+msgid "Change Price Title For All Products"
+msgstr "すべての商品の価格タイトルを変更"
+
+#: includes/class-cwpt-settings.php:46
+msgid "Here you can set price title for all your products. Also you can use PRICE shortcode as per your requirement. E.g From: PRICE Only/-"
+msgstr "すべての商品の価格タイトルを設定できます。必要に応じて PRICE コードも使用できます。例: PRICE から/-"
+
+#: includes/class-cwpt-settings.php:55
+msgid "Hide Price Title"
+msgstr "価格タイトルを非表示"
+
+#: includes/class-cwpt-settings.php:56
+msgid "You can hide price title for all WooCommerce products."
+msgstr "すべての WooCommerce 商品の価格タイトルを非表示にできます。"
+
+#: includes/class-cwpt-settings.php:63
+msgid "Apply Above Options On All WooCommerce Pages"
+msgstr "上記のオプションをすべての WooCommerce ページに適用"
+
+#: includes/class-cwpt-settings.php:64
+msgid "Enable this if you wish to apply above setting on all WooCommerce Pages."
+msgstr "上記の設定をすべての WooCommerce ページに適用する場合は有効にしてください。"
+
+#: includes/class-cwpt-settings.php:71
+msgid "Enable to show price by multiplying with quantity"
+msgstr "数量を掛けた価格を表示"
+
+#: includes/class-cwpt-settings.php:72
+msgid "Enable this if you wish to show price as per the multiply by quantity."
+msgstr "選択した数量を掛けた価格を表示する場合は有効にしてください。"
+
+#: includes/class-cwpt-settings.php:85
+msgid "Upgrade to Pro"
+msgstr "Pro にアップグレード"
+
+#: includes/class-cwpt-settings.php:112
+msgid "Change Price Title Pro for WooCommerce"
+msgstr "Change Price Title Pro for WooCommerce"
+
+#: includes/class-cwpt-settings.php:113
+msgid "Unlock advanced features and take complete control of your product pricing display with the Pro version!"
+msgstr "Pro 版で高度な機能を利用し、商品の価格表示を完全にコントロールしましょう !"
+
+#: includes/class-cwpt-settings.php:114
+msgid "Pro Features Include:"
+msgstr "Pro 版の機能:"
+
+#: includes/class-cwpt-settings.php:116
+msgid "Advanced price formatting options with multiple templates"
+msgstr "複数のテンプレートによる高度な価格書式オプション"
+
+#: includes/class-cwpt-settings.php:117
+msgid "Category-specific price titles"
+msgstr "カテゴリー別の価格タイトル"
+
+#: includes/class-cwpt-settings.php:118
+msgid "User role-based price display"
+msgstr "ユーザー権限グループに基づく価格表示"
+
+#: includes/class-cwpt-settings.php:119
+msgid "Custom price suffixes and prefixes"
+msgstr "価格のカスタム接頭辞・接尾辞"
+
+#: includes/class-cwpt-settings.php:120
+msgid "Conditional pricing rules"
+msgstr "条件付き価格ルール"
+
+#: includes/class-cwpt-settings.php:121
+msgid "Priority support and regular updates"
+msgstr "優先サポートと定期的なアップデート"
+
+#: includes/class-cwpt-settings.php:122
+msgid "And much more..."
+msgstr "その他多数..."
+
+#: includes/class-cwpt-settings.php:125
+msgid "Upgrade to Pro Now"
+msgstr "今すぐ Pro にアップグレード"

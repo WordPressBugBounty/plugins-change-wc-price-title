@@ -108,44 +108,21 @@ if ( class_exists( 'WC_Settings_Page' ) ) {
 
 			ob_start();
 			?>
-			<div style="background: #f0f6fc; border: 1px solid #c3e0f7; border-radius: 4px; padding: 20px; margin: 10px 0;">
-				<h3 style="margin-top: 0; color: #0073aa;">
-					<span class="dashicons dashicons-star-filled" style="color: #f1c40f;"></span><?php esc_html_e( 'Change Price Title Pro for WooCommerce', 'change-wc-price-title' ); ?>
-				</h3>
-				
-				<p style="font-size: 14px; line-height: 1.6;">
-					<?php esc_html_e( 'Unlock advanced features and take complete control of your product pricing display with the Pro version!', 'change-wc-price-title' ); ?>
-				</p>
-				
-				<div style="margin: 20px 0;">
-					<h4 style="margin-bottom: 10px;"><?php esc_html_e( 'Pro Features Include:', 'change-wc-price-title' ); ?></h4>
-					<ul style="list-style: none; padding: 0; margin: 0;">
-						<li style="padding: 8px 0; border-bottom: 1px solid #ddd;">
-							<span class="dashicons dashicons-yes" style="color: #46b450;"></span><?php esc_html_e( 'Advanced price formatting options with multiple templates', 'change-wc-price-title' ); ?>
-						</li>
-						<li style="padding: 8px 0; border-bottom: 1px solid #ddd;">
-							<span class="dashicons dashicons-yes" style="color: #46b450;"></span><?php esc_html_e( 'Category-specific price titles', 'change-wc-price-title' ); ?>
-						</li>
-						<li style="padding: 8px 0; border-bottom: 1px solid #ddd;">
-							<span class="dashicons dashicons-yes" style="color: #46b450;"></span><?php esc_html_e( 'User role-based price display', 'change-wc-price-title' ); ?>
-						</li>
-						<li style="padding: 8px 0; border-bottom: 1px solid #ddd;">
-							<span class="dashicons dashicons-yes" style="color: #46b450;"></span><?php esc_html_e( 'Custom price suffixes and prefixes', 'change-wc-price-title' ); ?>
-						</li>
-						<li style="padding: 8px 0; border-bottom: 1px solid #ddd;">
-							<span class="dashicons dashicons-yes" style="color: #46b450;"></span><?php esc_html_e( 'Conditional pricing rules', 'change-wc-price-title' ); ?>
-						</li>
-						<li style="padding: 8px 0; border-bottom: 1px solid #ddd;">
-							<span class="dashicons dashicons-yes" style="color: #46b450;"></span><?php esc_html_e( 'Priority support and regular updates', 'change-wc-price-title' ); ?>
-						</li>
-						<li style="padding: 8px 0;">
-							<span class="dashicons dashicons-yes" style="color: #46b450;"></span><?php esc_html_e( 'And much more...', 'change-wc-price-title' ); ?>
-						</li>
-					</ul>
-				</div>
-				
-				<p style="margin-top: 20px;">
-					<a href="<?php echo esc_url( $pro_url ); ?>" class="button button-primary button-large" target="_blank" style="background: #0073aa; border-color: #0073aa; text-shadow: none; box-shadow: none;"><span class="dashicons dashicons-external" style="margin-top: 3px;"></span><?php esc_html_e( 'Upgrade to Pro Now', 'change-wc-price-title' ); ?></a>
+			<div class="cwpt-pro-box">
+				<h3><span class="dashicons dashicons-star-filled"></span><?php esc_html_e( 'Change Price Title Pro for WooCommerce', 'change-wc-price-title' ); ?></h3>
+				<p class="cwpt-pro-intro"><?php esc_html_e( 'Unlock advanced features and take complete control of your product pricing display with the Pro version!', 'change-wc-price-title' ); ?></p>
+				<h4><?php esc_html_e( 'Pro Features Include:', 'change-wc-price-title' ); ?></h4>
+				<ul class="cwpt-pro-features">
+					<li><span class="dashicons dashicons-yes"></span><?php esc_html_e( 'Advanced price formatting options with multiple templates', 'change-wc-price-title' ); ?></li>
+					<li><span class="dashicons dashicons-yes"></span><?php esc_html_e( 'Category-specific price titles', 'change-wc-price-title' ); ?></li>
+					<li><span class="dashicons dashicons-yes"></span><?php esc_html_e( 'User role-based price display', 'change-wc-price-title' ); ?></li>
+					<li><span class="dashicons dashicons-yes"></span><?php esc_html_e( 'Custom price suffixes and prefixes', 'change-wc-price-title' ); ?></li>
+					<li><span class="dashicons dashicons-yes"></span><?php esc_html_e( 'Conditional pricing rules', 'change-wc-price-title' ); ?></li>
+					<li><span class="dashicons dashicons-yes"></span><?php esc_html_e( 'Priority support and regular updates', 'change-wc-price-title' ); ?></li>
+					<li><span class="dashicons dashicons-yes"></span><?php esc_html_e( 'And much more...', 'change-wc-price-title' ); ?></li>
+				</ul>
+				<p class="cwpt-pro-cta">
+					<a href="<?php echo esc_url( $pro_url ); ?>" class="button button-primary button-large" target="_blank" rel="noopener noreferrer"><span class="dashicons dashicons-external"></span><?php esc_html_e( 'Upgrade to Pro Now', 'change-wc-price-title' ); ?></a>
 				</p>
 			</div>
 			<?php
@@ -160,6 +137,4 @@ if ( class_exists( 'WC_Settings_Page' ) ) {
 			WC_Admin_Settings::save_fields( $settings );
 		}
 	}
-
-	return new CWPT_WC_Settings();
 }

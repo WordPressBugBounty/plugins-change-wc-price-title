@@ -1,0 +1,56 @@
+/* Upgrade to Pro box on WooCommerce > Settings > Price Title. */
+.cwpt-pro-box {
+	background: #f0f6fc;
+	border: 1px solid #c3e0f7;
+	border-radius: 4px;
+	padding: 20px;
+	margin: 10px 0;
+	max-width: 800px;
+}
+
+.cwpt-pro-box h3 {
+	margin-top: 0;
+	color: #0073aa;
+}
+
+.cwpt-pro-box h3 .dashicons {
+	color: #f1c40f;
+	margin-right: 4px;
+}
+
+.cwpt-pro-box .cwpt-pro-intro {
+	font-size: 14px;
+	line-height: 1.6;
+}
+
+.cwpt-pro-box h4 {
+	margin: 20px 0 10px;
+}
+
+.cwpt-pro-features {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+
+.cwpt-pro-features li {
+	padding: 8px 0;
+	margin: 0;
+	border-bottom: 1px solid #ddd;
+}
+
+.cwpt-pro-features li:last-child {
+	border-bottom: 0;
+}
+
+.cwpt-pro-features .dashicons-yes {
+	color: #46b450;
+}
+
+.cwpt-pro-box .cwpt-pro-cta {
+	margin-top: 20px;
+}
+
+.cwpt-pro-box .cwpt-pro-cta .dashicons {
+	margin-top: 3px;
+}

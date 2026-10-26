@@ -2,43 +2,28 @@
 /**
  * Change Price Title for WooCommerce
  *
- * Uninstalling Change Price Title for WooCommerce Plugin deletes options.
+ * Uninstalling Change Price Title for WooCommerce Plugin deletes options and product meta.
  *
  * @author      Kartik Parmar
  * @category    Core
  * @package     Change_WooCommerce_Price_Title/Uninstall
- * @version     1.4
+ * @version     3.1
  */
 
 if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 	exit;
 }
 
-global $wpdb;
-
-require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-
 /**
- * Delete the data for the WordPress Multisite.
+ * Delete the plugin's options and product meta for the current site.
  */
-if ( is_multisite() ) {
-
-	$cwpt_blog_list = get_sites();
-
-	foreach ( $cwpt_blog_list as $cwpt_blog_list_key => $cwpt_blog_list_value ) {
-		$cwpt_blog_id = $cwpt_blog_list_value->blog_id;
-		delete_blog_option( $cwpt_blog_id, 'cwpt_woocommerce_price_title' );
-		delete_blog_option( $cwpt_blog_id, 'cwpt_woocommerce_hide_price_title' );
-		delete_blog_option( $cwpt_blog_id, 'cwpt_apply_on_all_products' );
-		delete_blog_option( $cwpt_blog_id, 'cwpt_enable_multiplier' );
-		delete_blog_option( $cwpt_blog_id, 'change_woocommerce_price_title_db_version' );
-	}
-} else {
-	// deleting all the seting added at product level.
+function cwpt_uninstall_site_data() {
+	// Deleting all the settings added at product level.
 	delete_post_meta_by_key( '_cwpt_price_title' );
 	delete_post_meta_by_key( '_cwpt_hide_price' );
+	delete_post_meta_by_key( '_cwpt_apply_on_all_wc_pages' );
 
-	// deleteing options added from global level.
+	// Deleting options added from global level.
 	delete_option( 'cwpt_woocommerce_price_title' );
 	delete_option( 'cwpt_woocommerce_hide_price_title' );
 	delete_option( 'cwpt_apply_on_all_products' );
@@ -47,5 +32,19 @@ if ( is_multisite() ) {
 	delete_option( 'cwpt_show_migration_notice' );
 }
 
-// Clear any cached data that has been removed.
-wp_cache_flush();
+if ( is_multisite() ) {
+	$cwpt_site_ids = get_sites(
+		array(
+			'fields' => 'ids',
+			'number' => 0,
+		)
+	);
+
+	foreach ( $cwpt_site_ids as $cwpt_site_id ) {
+		switch_to_blog( $cwpt_site_id );
+		cwpt_uninstall_site_data();
+		restore_current_blog();
+	}
+} else {
+	cwpt_uninstall_site_data();
+}
